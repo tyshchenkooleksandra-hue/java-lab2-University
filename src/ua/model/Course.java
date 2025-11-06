@@ -1,9 +1,12 @@
 package ua.model;
 
 import ua.model.enums.ExamType;
+import ua.util.ValidationHelper;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+
 public class Course extends BaseEntity {
     private String title;
     private int credits;
@@ -14,12 +17,10 @@ public class Course extends BaseEntity {
 
     public Course(String title, int credits, int duration, ExamType examType) {
         super();
-        if (title == null || title.isBlank()) {
-            throw new IllegalArgumentException("Title cannot be empty");
-        }
-        if (credits <= 0) throw new IllegalArgumentException("Credits must be positive");
-        if (duration <= 0) throw new IllegalArgumentException("Duration must be positive");
-        if (examType == null) throw new IllegalArgumentException("ExamType cannot be null");
+        ValidationHelper.requireNonBlank(title, "Course title");
+        ValidationHelper.requirePositive(credits, "Course credits");
+        ValidationHelper.requirePositive(duration, "Course duration");
+        ValidationHelper.requireNonNull(examType, "Exam type");
 
         this.title = title;
         this.credits = credits;
@@ -31,14 +32,39 @@ public class Course extends BaseEntity {
         this(title, credits, duration, ExamType.FINAL);
     }
 
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        ValidationHelper.requireNonBlank(title, "Course title");
+        this.title = title;
+    }
+
+    public int getCredits() {
+        return credits;
+    }
+
+    public void setCredits(int credits) {
+        ValidationHelper.requirePositive(credits, "Course credits");
+        this.credits = credits;
+    }
+
+    public int getDuration() {
+        return duration;
+    }
+
+    public void setDuration(int duration) {
+        ValidationHelper.requirePositive(duration, "Course duration");
+        this.duration = duration;
+    }
+
     public ExamType getExamType() {
         return examType;
     }
 
     public void setExamType(ExamType examType) {
-        if (examType == null) {
-            throw new IllegalArgumentException("ExamType cannot be null");
-        }
+        ValidationHelper.requireNonNull(examType, "Exam type");
         this.examType = examType;
     }
 
@@ -51,16 +77,12 @@ public class Course extends BaseEntity {
     }
 
     public void addEnrollment(Enrollment enrollment) {
-        Objects.requireNonNull(enrollment, "Enrollment cannot be null");
+        ValidationHelper.requireNonNull(enrollment, "Enrollment");
         enrollments.add(enrollment);
     }
 
     public List<Enrollment> getEnrollments() {
         return List.copyOf(enrollments);
-    }
-
-    public String getTitle() {
-        return title;
     }
 
     @Override
@@ -73,7 +95,8 @@ public class Course extends BaseEntity {
         sb.append(", examType=").append(examType);
         sb.append(", professor=");
         if (professor != null) {
-            sb.append(professor.getLastName()).append('(').append(professor.getId()).append(')');
+            sb.append(professor.getLastName())
+                    .append('(').append(professor.getId()).append(')');
         } else {
             sb.append("none");
         }
@@ -85,8 +108,7 @@ public class Course extends BaseEntity {
     @Override
     public boolean equals(Object other) {
         if (this == other) return true;
-        if (!(other instanceof Course)) return false;
-        Course course = (Course) other;
+        if (!(other instanceof Course course)) return false;
         return Objects.equals(id, course.id);
     }
 

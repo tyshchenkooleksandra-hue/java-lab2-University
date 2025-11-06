@@ -22,13 +22,12 @@ public class ModelFactory {
         return new Student(firstName, lastName);
     }
 
-    public static Course createCourse(String title, int credits, int duration, ExamType examType) {
+    public static Course createCourse(String title, int credits, int duration) {
         ValidationHelper.requireNonBlank(title, "Course title");
         ValidationHelper.requirePositive(credits, "Course credits");
         ValidationHelper.requirePositive(duration, "Course duration");
-        ValidationHelper.requireNonNull(examType, "Exam type");
 
-        return new Course(title, credits, duration, examType);
+        return new Course(title, credits, duration);
     }
 
     public static Enrollment createEnrollment(Student student, Course course) {
