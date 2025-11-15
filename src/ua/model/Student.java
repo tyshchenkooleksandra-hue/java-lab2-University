@@ -5,8 +5,13 @@ import ua.util.ValidationHelper;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level; // Імпорт
+import java.util.logging.Logger; // Імпорт
 
 public class Student extends Person {
+
+    private static final Logger LOGGER = Logger.getLogger(Student.class.getName());
+
     private final List<Enrollment> enrollments = new ArrayList<>();
 
     public Student(String firstName, String lastName) {
@@ -24,12 +29,16 @@ public class Student extends Person {
                 .anyMatch(e -> e.getCourse().equals(course));
 
         if (alreadyEnrolled) {
-            throw new IllegalStateException("Student is already enrolled in this course");
+            String errorMsg = "Student " + getFirstName() + " is already enrolled in " + course.getTitle();
+            LOGGER.log(Level.WARNING, errorMsg);
+            throw new IllegalStateException(errorMsg);
         }
 
         Enrollment enrollment = new Enrollment(this, course, LocalDate.now());
         enrollments.add(enrollment);
         course.addEnrollment(enrollment);
+
+        LOGGER.info("Student " + getFirstName() + " successfully enrolled in " + course.getTitle());
         return enrollment;
     }
 
@@ -41,5 +50,4 @@ public class Student extends Person {
         sb.append('}');
         return sb.toString();
     }
-
 }

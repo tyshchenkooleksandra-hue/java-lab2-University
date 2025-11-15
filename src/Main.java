@@ -1,41 +1,88 @@
-import ua.model.enums.ExamType;
-import ua.util.ModelFactory;
-import ua.model.*;
-import ua.model.enums.Departments;
+import ua.model.Course;
+import ua.model.Professor;
+import ua.model.Student;
+import ua.service.DataService;
+
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.List;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 public class Main {
+
+    private static final Logger LOGGER = Logger.getLogger("ua");
+
+    static {
+        LOGGER.setLevel(Level.ALL);
+        ConsoleHandler handler = new ConsoleHandler();
+        handler.setLevel(Level.ALL);
+        handler.setFormatter(new SimpleFormatter());
+        LOGGER.addHandler(handler);
+        LOGGER.setUseParentHandlers(false);
+    }
+
     public static void main(String[] args) {
 
-        Professor prof = ModelFactory.createProfessor("Elena", "Ivanova", Departments.COMPUTER_SCIENCE);
+        System.out.println("Current Working Directory: " + System.getProperty("user.dir"));
 
-        Course oop = ModelFactory.createCourse("OOP in Java", 5, 30, ExamType.FINAL);
-        Course db = ModelFactory.createCourse("Databases", 4, 25,ExamType.FINAL);
+        LOGGER.info("Application starting...");
 
-        prof.addCourse(oop);
-        prof.addCourse(db);
+        DataService dataService = new DataService();
+        List<Professor> professors = null;
+        List<Student> students = null;
+        List<Course> courses = null;
 
-        Student s1 = ModelFactory.createStudent("Ivan", "Petrov");
-        Student s2 = ModelFactory.createStudent("Maria", "Sidorova");
+        try {
+            professors = dataService.loadProfessors("professors.csv");
+            students = dataService.loadStudents("students.csv");
+            courses = dataService.loadCourses("courses.csv");
 
-        s1.enroll(oop);
-        s2.enroll(oop);
-        s1.enroll(db);
+            LOGGER.info("All data loaded successfully. Check WARNINGS for skipped lines.");
 
-        System.out.println("\n--- PROFESSOR ---");
-        System.out.println(prof);
+            if (professors.isEmpty() || students.isEmpty() || courses.isEmpty()) {
+                LOGGER.severe("Not enough data to run simulation. Exiting.");
+                return;
+            }
 
-        System.out.println("\n--- COURSES ---");
-        System.out.println(oop);
-        System.out.println(db);
+            Professor prof = professors.get(0);
+            Student s1 = students.get(0);
+            Student s2 = students.get(1);
+            Course oop = courses.get(0);
+            Course db = courses.get(1);
 
-        System.out.println("\n--- STUDENTS ---");
-        System.out.println(s1);
-        System.out.println(s2);
+            prof.addCourse(oop);
+            prof.addCourse(db);
 
-        System.out.println("\n--- Enrollments for OOP ---");
-        oop.getEnrollments().forEach(System.out::println);
+            try {
+                s1.enroll(oop);
+                s2.enroll(oop);
+                s1.enroll(db);
 
-        System.out.println("\n--- Enrollments for DB ---");
-        db.getEnrollments().forEach(System.out::println);
+                LOGGER.info("--- Attempting to enroll " + s1.getFirstName() + " in " + oop.getTitle() + " again... ---");
+                s1.enroll(oop);
+
+            } catch (IllegalStateException e) {
+                LOGGER.log(Level.SEVERE, "Logical Error caught: " + e.getMessage());
+            }
+
+            System.out.println("\n--- FINAL STATE ---");
+            System.out.println(prof);
+            System.out.println(oop);
+            System.out.println(db);
+            System.out.println(s1);
+            System.out.println(s2);
+
+        } catch (FileNotFoundException e) {
+            LOGGER.log(Level.SEVERE, "FATAL: Data file not found. " + e.getMessage(), e);
+        } catch (IOException e) {
+            LOGGER.log(Level.SEVERE, "FATAL: Failed to read data file. " + e.getMessage(), e);
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "An unexpected application error occurred.", e);
+        } finally {
+            LOGGER.info("Application shutting down.");
+        }
     }
 }
